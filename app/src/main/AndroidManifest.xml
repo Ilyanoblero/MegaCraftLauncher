@@ -4,7 +4,7 @@
     </queries>
     <application
         android:allowBackup="false"
-        android:label="MegaCraft Launcher"
+        android:label="Mega Launcher"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="false">
         <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="landscape" android:configChanges="orientation|screenSize|keyboardHidden">
