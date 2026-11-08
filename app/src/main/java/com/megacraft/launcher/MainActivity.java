@@ -109,7 +109,7 @@ public class MainActivity extends Activity {
             tile("Мой скин", "", 0xFF1766A7, "♟"),
             tile("Играть с друзьями", "", 0xFF286C32, "👥")
         };
-        for (TextView c : cards) {
+        for (LinearLayout c : cards) {
             LinearLayout.LayoutParams cp = lp(112, 78); cp.bottomMargin = dp(9); side.addView(c, cp);
         }
         middle.addView(side, lp(120, -1));
