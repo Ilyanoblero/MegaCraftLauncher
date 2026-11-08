@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.*;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -15,101 +16,307 @@ import android.content.Context;
 
 public class MainActivity extends Activity {
     private static final String CLIENT = "com.lituty.megacraftpe";
+    private static final String SERVER = "latecraft.ru";
+    private static final int BG = 0xFF0B1210;
+    private static final int PANEL = 0xFF17251F;
+    private static final int GREEN = 0xFF9BE56A;
     private EditText nickname;
-    private TextView status;
+    private TextView status, statusDot, tipText;
+
+    private final String[] tips = {
+        "Совет: придумай ник, который друзьям будет легко узнать.",
+        "Совет: перед запуском проверь, что клиент MegaCraft установлен.",
+        "Совет: адрес сервера можно скопировать одной кнопкой.",
+        "Совет: сохрани свой ник — он останется в лаунчере."
+    };
+    private int tipIndex = 0;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
-        getWindow().setStatusBarColor(Color.rgb(16,26,24));
-        getWindow().setNavigationBarColor(Color.rgb(16,26,24));
+        getWindow().setStatusBarColor(BG);
+        getWindow().setNavigationBarColor(BG);
         buildUi();
     }
 
-    private int dp(float v) { return (int)(v * getResources().getDisplayMetrics().density + .5f); }
-    private GradientDrawable bg(int color, int radius) {
-        GradientDrawable d = new GradientDrawable(); d.setColor(color); d.setCornerRadius(dp(radius)); return d;
+    private int dp(float v) {
+        return (int)(v * getResources().getDisplayMetrics().density + .5f);
     }
-    private TextView text(String value, int size, int color, boolean bold) {
-        TextView t = new TextView(this); t.setText(value); t.setTextSize(size); t.setTextColor(color);
+
+    private GradientDrawable shape(int color, int radius) {
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(color);
+        d.setCornerRadius(dp(radius));
+        return d;
+    }
+
+    private GradientDrawable outline(int color, int radius, int strokeColor) {
+        GradientDrawable d = shape(color, radius);
+        d.setStroke(dp(1), strokeColor);
+        return d;
+    }
+
+    private TextView label(String value, int size, int color, boolean bold) {
+        TextView t = new TextView(this);
+        t.setText(value);
+        t.setTextSize(size);
+        t.setTextColor(color);
         if (bold) t.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         return t;
     }
+
+    private LinearLayout column() {
+        LinearLayout l = new LinearLayout(this);
+        l.setOrientation(LinearLayout.VERTICAL);
+        return l;
+    }
+
+    private LinearLayout.LayoutParams lp(int width, int height) {
+        return new LinearLayout.LayoutParams(width < 0 ? width : dp(width), height < 0 ? height : dp(height));
+    }
+
     private void buildUi() {
-        ScrollView scroll = new ScrollView(this); scroll.setFillViewport(true);
-        LinearLayout root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(22), dp(22), dp(22), dp(26));
-        GradientDrawable gradient = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                new int[]{Color.rgb(25,48,39), Color.rgb(16,26,24), Color.rgb(12,19,20)});
-        root.setBackground(gradient); scroll.addView(root); setContentView(scroll);
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        scroll.setClipToPadding(false);
 
-        TextView brand = text("MEGACRAFT", 30, Color.WHITE, true);
-        brand.setLetterSpacing(.12f); brand.setGravity(Gravity.CENTER); root.addView(brand, matchWrap());
-        TextView subtitle = text("POCKET EDITION  •  LAUNCHER", 11, 0xFF9BB8A6, true);
-        subtitle.setGravity(Gravity.CENTER); subtitle.setPadding(0, dp(5), 0, dp(22)); root.addView(subtitle, matchWrap());
+        LinearLayout root = column();
+        root.setPadding(dp(20), dp(18), dp(20), dp(28));
+        GradientDrawable background = new GradientDrawable(
+            GradientDrawable.Orientation.TL_BR,
+            new int[]{0xFF1B3829, BG, 0xFF101A22}
+        );
+        root.setBackground(background);
+        scroll.addView(root);
+        setContentView(scroll);
 
-        LinearLayout hero = card(); hero.setOrientation(LinearLayout.VERTICAL); hero.setGravity(Gravity.CENTER);
-        TextView cube = text("▦", 66, 0xFF9BE56A, true); cube.setGravity(Gravity.CENTER); hero.addView(cube, matchWrap());
-        TextView version = text("MEGACRAFT 0.3.0", 18, Color.WHITE, true); version.setGravity(Gravity.CENTER); version.setPadding(0,dp(3),0,dp(4)); hero.addView(version, matchWrap());
-        TextView desc = text("Твой мир начинается здесь", 13, 0xFFB6C8BE, false); desc.setGravity(Gravity.CENTER); hero.addView(desc, matchWrap());
-        LinearLayout.LayoutParams hp = new LinearLayout.LayoutParams(-1, dp(180)); hp.bottomMargin = dp(18); root.addView(hero, hp);
+        LinearLayout top = new LinearLayout(this);
+        top.setGravity(Gravity.CENTER_VERTICAL);
+        TextView logo = label("✦", 29, GREEN, true);
+        top.addView(logo, lp(38, 42));
+        LinearLayout titleBox = column();
+        TextView brand = label("MEGACRAFT", 22, Color.WHITE, true);
+        brand.setLetterSpacing(.12f);
+        titleBox.addView(brand, lp(-1, -2));
+        TextView edition = label("POCKET EDITION  /  LAUNCHER", 9, 0xFF9BB8A6, true);
+        edition.setLetterSpacing(.12f);
+        titleBox.addView(edition, lp(-1, -2));
+        top.addView(titleBox, new LinearLayout.LayoutParams(0, -2, 1));
+        TextView versionBadge = label("v1.1", 11, GREEN, true);
+        versionBadge.setGravity(Gravity.CENTER);
+        versionBadge.setPadding(dp(12), dp(7), dp(12), dp(7));
+        versionBadge.setBackground(outline(0x3324D36B, 30, 0x6655B85D));
+        top.addView(versionBadge);
+        root.addView(top, lp(-1, -2));
 
-        nickname = new EditText(this); nickname.setSingleLine(true); nickname.setTextColor(Color.WHITE);
-        nickname.setHintTextColor(0xFF8EA198); nickname.setHint("Имя игрока (необязательно)");
+        TextView welcome = label("ТВОЁ ПРИКЛЮЧЕНИЕ\nНАЧИНАЕТСЯ ЗДЕСЬ", 25, Color.WHITE, true);
+        welcome.setLineSpacing(dp(2), 1f);
+        welcome.setPadding(0, dp(27), 0, dp(5));
+        root.addView(welcome, lp(-1, -2));
+        TextView sub = label("Запускай MegaCraft и возвращайся в свой мир.", 13, 0xFFB0C2B7, false);
+        root.addView(sub, lp(-1, -2));
+
+        LinearLayout hero = column();
+        hero.setPadding(dp(18), dp(18), dp(18), dp(18));
+        hero.setBackground(outline(0xFF1C3026, 22, 0xFF355640));
+        LinearLayout.LayoutParams heroParams = lp(-1, -2);
+        heroParams.topMargin = dp(22);
+        root.addView(hero, heroParams);
+
+        LinearLayout heroTop = new LinearLayout(this);
+        heroTop.setGravity(Gravity.CENTER_VERTICAL);
+        TextView cube = label("▦", 47, GREEN, true);
+        cube.setGravity(Gravity.CENTER);
+        heroTop.addView(cube, lp(65, 65));
+        LinearLayout gameInfo = column();
+        TextView gameName = label("MEGACRAFT", 17, Color.WHITE, true);
+        gameInfo.addView(gameName, lp(-1, -2));
+        TextView gameVersion = label("Версия клиента 0.3.0", 12, 0xFFB1C6B8, false);
+        gameInfo.addView(gameVersion, lp(-1, -2));
+        heroTop.addView(gameInfo, new LinearLayout.LayoutParams(0, -2, 1));
+        TextView tag = label("CLIENT", 9, GREEN, true);
+        tag.setPadding(dp(9), dp(6), dp(9), dp(6));
+        tag.setBackground(shape(0x3325D366, 20));
+        heroTop.addView(tag);
+        hero.addView(heroTop, lp(-1, -2));
+
+        View line = new View(this);
+        line.setBackgroundColor(0x334E765B);
+        LinearLayout.LayoutParams lineParams = lp(-1, 1);
+        lineParams.topMargin = dp(15);
+        lineParams.bottomMargin = dp(13);
+        hero.addView(line, lineParams);
+
+        LinearLayout statusRow = new LinearLayout(this);
+        statusRow.setGravity(Gravity.CENTER_VERTICAL);
+        statusDot = label("●", 12, 0xFFFFC46B, true);
+        statusRow.addView(statusDot, lp(20, -2));
+        status = label("Проверяем клиент…", 12, 0xFFB8C8BF, true);
+        statusRow.addView(status, new LinearLayout.LayoutParams(0, -2, 1));
+        TextView refresh = label("↻", 22, GREEN, true);
+        refresh.setGravity(Gravity.CENTER);
+        refresh.setOnClickListener(v -> refreshStatus());
+        statusRow.addView(refresh, lp(35, 35));
+        hero.addView(statusRow, lp(-1, -2));
+
+        nickname = new EditText(this);
+        nickname.setSingleLine(true);
+        nickname.setTextColor(Color.WHITE);
+        nickname.setHintTextColor(0xFF81968A);
+        nickname.setHint("Введи свой игровой ник");
         nickname.setText(getPreferences(MODE_PRIVATE).getString("nickname", ""));
-        nickname.setPadding(dp(15), 0, dp(15), 0); nickname.setTextSize(14); nickname.setBackground(bg(0xFF20332C, 14));
-        LinearLayout.LayoutParams np = new LinearLayout.LayoutParams(-1, dp(52)); np.bottomMargin = dp(12); root.addView(nickname,np);
+        nickname.setTextSize(14);
+        nickname.setPadding(dp(15), 0, dp(15), 0);
+        nickname.setBackground(outline(PANEL, 14, 0xFF30483A));
+        LinearLayout.LayoutParams nickParams = lp(-1, 53);
+        nickParams.topMargin = dp(17);
+        root.addView(nickname, nickParams);
 
-        Button play = button("▶   ИГРАТЬ", 0xFF91DF5B, 0xFF172316); root.addView(play, buttonParams(58, 12));
+        TextView play = label("▶     ИГРАТЬ", 15, 0xFF142012, true);
+        play.setGravity(Gravity.CENTER);
+        play.setBackground(shape(GREEN, 16));
+        LinearLayout.LayoutParams playParams = lp(-1, 58);
+        playParams.topMargin = dp(12);
+        root.addView(play, playParams);
+        play.setElevation(dp(4));
         play.setOnClickListener(v -> launchClient());
 
-        status = text("Проверяем установку клиента…", 12, 0xFFB7C9BF, false);
-        status.setGravity(Gravity.CENTER); status.setPadding(0,dp(12),0,dp(18)); root.addView(status, matchWrap()); refreshStatus();
+        TextView quickTitle = label("БЫСТРЫЕ ДЕЙСТВИЯ", 10, 0xFF91A99A, true);
+        quickTitle.setLetterSpacing(.13f);
+        LinearLayout.LayoutParams qTitleParams = lp(-1, -2);
+        qTitleParams.topMargin = dp(26);
+        qTitleParams.bottomMargin = dp(11);
+        root.addView(quickTitle, qTitleParams);
 
-        TextView section = text("БЫСТРЫЙ ДОСТУП", 11, 0xFF8FA99A, true); section.setLetterSpacing(.1f); section.setPadding(dp(2),dp(5),0,dp(10)); root.addView(section,matchWrap());
-        LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL);
-        Button server = button("СЕРВЕР",0xFF294438,Color.WHITE); Button settings = button("НАСТРОЙКИ",0xFF294438,Color.WHITE);
-        LinearLayout.LayoutParams half = new LinearLayout.LayoutParams(0,dp(48),1); half.rightMargin=dp(6); row.addView(server,half);
-        LinearLayout.LayoutParams half2 = new LinearLayout.LayoutParams(0,dp(48),1); half2.leftMargin=dp(6); row.addView(settings,half2); root.addView(row);
+        LinearLayout actions = new LinearLayout(this);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        TextView server = actionTile("⌁", "Сервер", "Копировать адрес");
+        TextView help = actionTile("?", "Помощь", "Как начать играть");
+        LinearLayout.LayoutParams tile1 = new LinearLayout.LayoutParams(0, dp(92), 1);
+        tile1.rightMargin = dp(6);
+        LinearLayout.LayoutParams tile2 = new LinearLayout.LayoutParams(0, dp(92), 1);
+        tile2.leftMargin = dp(6);
+        actions.addView(server, tile1);
+        actions.addView(help, tile2);
+        root.addView(actions, lp(-1, -2));
         server.setOnClickListener(v -> copyServer());
-        settings.setOnClickListener(v -> showSettings());
+        help.setOnClickListener(v -> showHelp());
 
-        TextView footer = text("MegaCraft Launcher 1.0  •  Неофициальный лаунчер", 10, 0xFF71857B, false);
-        footer.setGravity(Gravity.CENTER); footer.setPadding(0,dp(24),0,0); root.addView(footer,matchWrap());
-    }
-    private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setPadding(dp(16),dp(16),dp(16),dp(16)); l.setBackground(bg(0xFF20382E,20)); return l; }
-    private Button button(String label, int color, int fg) {
-        Button b = new Button(this); b.setText(label); b.setTextSize(13); b.setTextColor(fg); b.setAllCaps(false);
-        b.setTypeface(Typeface.DEFAULT,Typeface.BOLD); b.setBackground(bg(color,14));
-        if (android.os.Build.VERSION.SDK_INT >= 21) b.setElevation(dp(2)); return b;
-    }
-    private LinearLayout.LayoutParams matchWrap() { return new LinearLayout.LayoutParams(-1,-2); }
-    private LinearLayout.LayoutParams buttonParams(int h,int bottom) { LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1,dp(h)); p.bottomMargin=dp(bottom); return p; }
-    private boolean isInstalled() {
-        try { getPackageManager().getPackageInfo(CLIENT,0); return true; }
-        catch (PackageManager.NameNotFoundException e) { return false; }
-    }
-    private void refreshStatus() {
-        status.setText(isInstalled() ? "● Клиент установлен и готов к запуску" : "○ MegaCraft не найден. Сначала установи MegaCraft 0.3.0.");
-        status.setTextColor(isInstalled() ? 0xFF9BE56A : 0xFFFFC46B);
-    }
-    private void launchClient() {
-        getPreferences(MODE_PRIVATE).edit().putString("nickname",nickname.getText().toString().trim()).apply();
-        Intent intent = getPackageManager().getLaunchIntentForPackage(CLIENT);
-        if (intent != null) { startActivity(intent); }
-        else new android.app.AlertDialog.Builder(this).setTitle("Клиент не установлен")
-                .setMessage("Установи MegaCraft 0.3.0 отдельно, затем вернись в лаунчер и нажми «Играть».")
-                .setPositiveButton("Понятно",null).show();
+        LinearLayout tipCard = column();
+        tipCard.setPadding(dp(15), dp(13), dp(15), dp(13));
+        tipCard.setBackground(shape(0xFF18251F, 16));
+        LinearLayout.LayoutParams tipParams = lp(-1, -2);
+        tipParams.topMargin = dp(13);
+        root.addView(tipCard, tipParams);
+        TextView tipHead = label("✧  ПОДСКАЗКА", 10, GREEN, true);
+        tipCard.addView(tipHead, lp(-1, -2));
+        tipText = label(tips[0], 12, 0xFFB9C9BF, false);
+        tipText.setPadding(0, dp(6), 0, dp(4));
+        tipCard.addView(tipText, lp(-1, -2));
+        TextView nextTip = label("ДРУГАЯ ПОДСКАЗКА  ↗", 9, 0xFF91B77F, true);
+        nextTip.setPadding(0, dp(7), 0, 0);
+        tipCard.addView(nextTip, lp(-1, -2));
+        nextTip.setOnClickListener(v -> {
+            tipIndex = (tipIndex + 1) % tips.length;
+            tipText.setText(tips[tipIndex]);
+        });
+
+        TextView footer = label("MEGACRAFT LAUNCHER  •  НЕОФИЦИАЛЬНЫЙ ПРОЕКТ", 9, 0xFF63776C, true);
+        footer.setGravity(Gravity.CENTER);
+        footer.setPadding(0, dp(24), 0, 0);
+        root.addView(footer, lp(-1, -2));
+
         refreshStatus();
     }
-    private void copyServer() {
-        String address = "latecraft.ru";
-        ClipboardManager cm=(ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
-        cm.setPrimaryClip(ClipData.newPlainText("MegaCraft server",address));
-        Toast.makeText(this,"Адрес latecraft.ru скопирован",Toast.LENGTH_SHORT).show();
+
+    private TextView actionTile(String icon, String title, String subtitle) {
+        LinearLayout box = column();
+        box.setGravity(Gravity.CENTER_VERTICAL);
+        box.setPadding(dp(14), dp(10), dp(10), dp(10));
+        box.setBackground(outline(0xFF192820, 16, 0xFF304B39));
+        TextView iconView = label(icon, 21, GREEN, true);
+        box.addView(iconView, lp(-1, 25));
+        TextView titleView = label(title, 14, Color.WHITE, true);
+        box.addView(titleView, lp(-1, -2));
+        TextView subView = label(subtitle, 10, 0xFF91A69A, false);
+        box.addView(subView, lp(-1, -2));
+        return wrapAsTextView(box);
     }
-    private void showSettings() {
-        new android.app.AlertDialog.Builder(this).setTitle("Настройки лаунчера")
-                .setMessage("Версия клиента: 0.3.0\nПакет: " + CLIENT + "\n\nЛаунчер сохраняет только имя игрока на этом устройстве. Изменение игровых настроек выполняется внутри MegaCraft.")
-                .setPositiveButton("ОК",null).show();
+
+    // A clickable compact tile built from a custom TextView keeps the layout lightweight.
+    private TextView wrapAsTextView(LinearLayout source) {
+        TextView tile = label("", 12, Color.WHITE, false);
+        tile.setVisibility(View.GONE);
+        source.setFocusable(true);
+        source.setClickable(true);
+        source.setOnTouchListener((v, event) -> {
+            if (event.getAction() == android.view.MotionEvent.ACTION_DOWN) v.setAlpha(.75f);
+            if (event.getAction() == android.view.MotionEvent.ACTION_UP || event.getAction() == android.view.MotionEvent.ACTION_CANCEL) v.setAlpha(1f);
+            return false;
+        });
+        // Return the actual layout through a lightweight subclass is unnecessary; use a FrameLayout.
+        android.widget.FrameLayout frame = new android.widget.FrameLayout(this);
+        frame.addView(source, new android.widget.FrameLayout.LayoutParams(-1, -1));
+        frame.setBackground(source.getBackground());
+        frame.setClickable(true);
+        frame.setFocusable(true);
+        frame.setOnClickListener(v -> source.performClick());
+        source.setOnClickListener(v -> frame.performClick());
+        return new TileTextView(this, frame);
+    }
+
+    private class TileTextView extends TextView {
+        private final android.widget.FrameLayout content;
+        TileTextView(Context context, android.widget.FrameLayout content) {
+            super(context);
+            this.content = content;
+            setVisibility(View.GONE);
+        }
+    }
+
+    private boolean isInstalled() {
+        try {
+            getPackageManager().getPackageInfo(CLIENT, 0);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
+
+    private void refreshStatus() {
+        if (status == null) return;
+        boolean installed = isInstalled();
+        status.setText(installed ? "Клиент установлен — можно запускать" : "Клиент не найден на устройстве");
+        status.setTextColor(installed ? GREEN : 0xFFFFC46B);
+        statusDot.setTextColor(installed ? GREEN : 0xFFFFC46B);
+    }
+
+    private void launchClient() {
+        String name = nickname.getText().toString().trim();
+        getPreferences(MODE_PRIVATE).edit().putString("nickname", name).apply();
+        Intent intent = getPackageManager().getLaunchIntentForPackage(CLIENT);
+        if (intent != null) {
+            startActivity(intent);
+        } else {
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("MegaCraft пока не установлен")
+                .setMessage("Установи MegaCraft 0.3.0 отдельно. Этот лаунчер не содержит игровой клиент. После установки вернись сюда и нажми «Играть».")
+                .setPositiveButton("Понятно", null)
+                .show();
+        }
+        refreshStatus();
+    }
+
+    private void copyServer() {
+        ClipboardManager cm = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
+        cm.setPrimaryClip(ClipData.newPlainText("MegaCraft server", SERVER));
+        Toast.makeText(this, "Адрес " + SERVER + " скопирован", Toast.LENGTH_SHORT).show();
+    }
+
+    private void showHelp() {
+        new android.app.AlertDialog.Builder(this)
+            .setTitle("Как начать играть")
+            .setMessage("1. Установи MegaCraft 0.3.0 отдельно.\n2. Введи свой ник в лаунчере.\n3. Нажми «Играть».\n4. Кнопка «Сервер» копирует адрес " + SERVER + ".\n\nЛаунчер не устанавливает и не изменяет игровой клиент.")
+            .setPositiveButton("Понятно", null)
+            .show();
     }
 }
