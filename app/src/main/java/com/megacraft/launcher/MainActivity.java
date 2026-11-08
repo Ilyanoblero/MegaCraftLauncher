@@ -49,7 +49,7 @@ public class MainActivity extends Activity {
     private LinearLayout.LayoutParams lp(int w, int h) {
         return new LinearLayout.LayoutParams(w < 0 ? w : dp(w), h < 0 ? h : dp(h));
     }
-    private TextView tile(String title, String sub, int color, String icon) {
+    private LinearLayout tile(String title, String sub, int color, String icon) {
         LinearLayout item = col();
         item.setPadding(dp(10), dp(8), dp(8), dp(8));
         item.setBackground(box(color, 9, 0xFF18251A));
@@ -103,7 +103,7 @@ public class MainActivity extends Activity {
         mp.topMargin = dp(8); page.addView(middle, mp);
 
         LinearLayout side = col(); side.setGravity(Gravity.CENTER_VERTICAL);
-        TextView[] cards = {
+        LinearLayout[] cards = {
             tile("Магазин", "НОВОЕ", 0xFFB51D45, "✦"),
             tile("Тиры PvP", "НОВОЕ", 0xFFC65A24, "⚔"),
             tile("Мой скин", "", 0xFF1766A7, "♟"),
