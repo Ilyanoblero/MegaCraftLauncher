@@ -189,8 +189,8 @@ public class MainActivity extends Activity {
 
         LinearLayout actions = new LinearLayout(this);
         actions.setOrientation(LinearLayout.HORIZONTAL);
-        TextView server = actionTile("⌁", "Сервер", "Копировать адрес");
-        TextView help = actionTile("?", "Помощь", "Как начать играть");
+        View server = actionTile("⌁", "Сервер", "Копировать адрес");
+        View help = actionTile("?", "Помощь", "Как начать играть");
         LinearLayout.LayoutParams tile1 = new LinearLayout.LayoutParams(0, dp(92), 1);
         tile1.rightMargin = dp(6);
         LinearLayout.LayoutParams tile2 = new LinearLayout.LayoutParams(0, dp(92), 1);
@@ -228,7 +228,7 @@ public class MainActivity extends Activity {
         refreshStatus();
     }
 
-    private TextView actionTile(String icon, String title, String subtitle) {
+    private View actionTile(String icon, String title, String subtitle) {
         LinearLayout box = column();
         box.setGravity(Gravity.CENTER_VERTICAL);
         box.setPadding(dp(14), dp(10), dp(10), dp(10));
@@ -239,38 +239,14 @@ public class MainActivity extends Activity {
         box.addView(titleView, lp(-1, -2));
         TextView subView = label(subtitle, 10, 0xFF91A69A, false);
         box.addView(subView, lp(-1, -2));
-        return wrapAsTextView(box);
-    }
-
-    // A clickable compact tile built from a custom TextView keeps the layout lightweight.
-    private TextView wrapAsTextView(LinearLayout source) {
-        TextView tile = label("", 12, Color.WHITE, false);
-        tile.setVisibility(View.GONE);
-        source.setFocusable(true);
-        source.setClickable(true);
-        source.setOnTouchListener((v, event) -> {
+        box.setClickable(true);
+        box.setFocusable(true);
+        box.setOnTouchListener((v, event) -> {
             if (event.getAction() == android.view.MotionEvent.ACTION_DOWN) v.setAlpha(.75f);
             if (event.getAction() == android.view.MotionEvent.ACTION_UP || event.getAction() == android.view.MotionEvent.ACTION_CANCEL) v.setAlpha(1f);
             return false;
         });
-        // Return the actual layout through a lightweight subclass is unnecessary; use a FrameLayout.
-        android.widget.FrameLayout frame = new android.widget.FrameLayout(this);
-        frame.addView(source, new android.widget.FrameLayout.LayoutParams(-1, -1));
-        frame.setBackground(source.getBackground());
-        frame.setClickable(true);
-        frame.setFocusable(true);
-        frame.setOnClickListener(v -> source.performClick());
-        source.setOnClickListener(v -> frame.performClick());
-        return new TileTextView(this, frame);
-    }
-
-    private class TileTextView extends TextView {
-        private final android.widget.FrameLayout content;
-        TileTextView(Context context, android.widget.FrameLayout content) {
-            super(context);
-            this.content = content;
-            setVisibility(View.GONE);
-        }
+        return box;
     }
 
     private boolean isInstalled() {
