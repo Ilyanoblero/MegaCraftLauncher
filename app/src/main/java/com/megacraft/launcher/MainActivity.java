@@ -205,9 +205,9 @@ public class MainActivity extends Activity {
             .setPositiveButton("OK", null).show();
     }
     private void onMenuAction(String title) {
-        if (title.contains("Магазин")) showInfo("Store", "Магазин MegaCraft. Покупки доступны в игровом клиенте.");
-        else if (title.contains("Тиры")) showInfo("PvP Arenas", "Открой MegaCraft и выбери PvP-режим на сервере.");
-        else if (title.contains("скин")) showInfo("My skin", "Управление скином пока доступно в самом MegaCraft.");
+        if (title.contains("STORE")) showInfo("Store", "Магазин MegaCraft. Покупки доступны в игровом клиенте.");
+        else if (title.contains("PVP")) showInfo("PvP Arenas", "Открой MegaCraft и выбери PvP-режим на сервере.");
+        else if (title.contains("SKINS")) showInfo("My skin", "Управление скином пока доступно в самом MegaCraft.");
         else inviteFriend();
     }
     private void showSettings() {
