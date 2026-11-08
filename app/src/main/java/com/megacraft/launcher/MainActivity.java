@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.graphics.*;
 import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
@@ -21,9 +22,10 @@ public class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         getWindow().setStatusBarColor(0xFF111512);
         getWindow().setNavigationBarColor(0xFF111512);
-        landscape = getResources().getDisplayMetrics().widthPixels > getResources().getDisplayMetrics().heightPixels;
+        landscape = true;
         render();
     }
 
@@ -58,8 +60,7 @@ public class MainActivity extends Activity {
         TextView name = label(title, landscape ? 13 : 11, Color.WHITE, true);
         item.addView(name, lp(-1, -2));
         if (sub != null) { TextView small = label(sub, 8, 0xFFE8F5E5, false); item.addView(small); }
-        item.setElevation(dp(4)); item.setOnClickListener(v ->
-            Toast.makeText(this, title, Toast.LENGTH_SHORT).show());
+        item.setElevation(dp(4)); item.setOnClickListener(v -> onMenuAction(title));
         return item;
     }
 
@@ -76,9 +77,9 @@ public class MainActivity extends Activity {
         LinearLayout top = row();
         top.setPadding(dp(12), dp(4), dp(12), dp(4));
         top.setBackgroundColor(0xEE151A17);
-        TextView logo = label("▣  MEGACRAFT", 15, Color.WHITE, true);
+        TextView logo = label("▣  MEGA LAUNCHER", 15, Color.WHITE, true);
         top.addView(logo, new LinearLayout.LayoutParams(0, dp(38), 1));
-        TextView online = label("👥  2 В СЕТИ", 10, Color.WHITE, true);
+        TextView online = label("●  CLIENT READY", 10, Color.WHITE, true);
         online.setPadding(dp(10), dp(8), dp(10), dp(8));
         online.setBackground(box(0xFF202820, 8, 0xFF101810));
         top.addView(online);
@@ -90,10 +91,10 @@ public class MainActivity extends Activity {
         TextView bug = label("⚙", 18, Color.WHITE, true); bug.setGravity(Gravity.CENTER);
         bug.setBackground(box(green, 7, 0xFF1A5A17));
         LinearLayout.LayoutParams bp = lp(40, 38); bp.leftMargin = dp(7); top.addView(bug, bp);
-        bug.setOnClickListener(v -> Toast.makeText(this, "Настройки лаунчера", Toast.LENGTH_SHORT).show());
+        bug.setOnClickListener(v -> showSettings());
         page.addView(top, lp(-1, 46));
 
-        if (landscape) buildLandscape(page); else buildPortrait(page);
+        buildLandscape(page);
         setContentView(root);
     }
 
@@ -120,11 +121,12 @@ public class MainActivity extends Activity {
         Avatar avatar = new Avatar(this);
         FrameLayout.LayoutParams avp = new FrameLayout.LayoutParams(dp(230), -1, Gravity.CENTER);
         stage.addView(avatar, avp);
-        TextView discord = label("ВОЙСЫ И ПАТИ\nВ DISCORD\n\n▶  ЗАЙТИ", 15, Color.WHITE, true);
+        TextView discord = label("PARTY UP\nVOICE CHAT\n\n▶  OPEN DISCORD", 15, Color.WHITE, true);
         discord.setPadding(dp(12), dp(12), dp(12), dp(12));
         discord.setBackground(box(0xFF2936A2, 5, 0xFF111A4B));
         FrameLayout.LayoutParams disP = new FrameLayout.LayoutParams(dp(165), dp(118), Gravity.RIGHT | Gravity.CENTER_VERTICAL);
         disP.rightMargin = dp(5); stage.addView(discord, disP);
+        discord.setOnClickListener(v -> showDiscord());
 
         LinearLayout bottom = col(); bottom.setPadding(dp(4), dp(4), dp(4), dp(2));
         LinearLayout quick = row(); quick.setGravity(Gravity.CENTER);
@@ -137,17 +139,18 @@ public class MainActivity extends Activity {
         launchPanel.setPadding(dp(8), dp(7), dp(8), dp(7));
         launchPanel.setBackground(box(0xFF182B20, 7, 0xFF0C2110));
         LinearLayout game = col(); game.setPadding(dp(12), dp(7), dp(8), dp(5));
-        game.addView(label("СЕГОДНЯ ИГРАЕМ", 9, 0xFFD5E7D3, true));
+        game.addView(label("READY TO PLAY", 9, 0xFFD5E7D3, true));
         game.addView(label("MegaCraft", 22, Color.WHITE, true));
-        game.addView(label("Pocket Edition  •  0.3.0", 9, 0xFFB9D2B5, false));
+        game.addView(label("MEGACRAFT  •  VERSION 0.3.0", 9, 0xFFB9D2B5, false));
         launchPanel.addView(game, new LinearLayout.LayoutParams(0, -2, 1));
         LinearLayout actions = col();
-        TextView play = label("▶  Играть", 22, 0xFF10210D, true); play.setGravity(Gravity.CENTER);
+        TextView play = label("▶  PLAY", 22, 0xFF10210D, true); play.setGravity(Gravity.CENTER);
         play.setBackground(box(0xFF63D842, 6, 0xFF276D1C));
         actions.addView(play, lp(190, 58)); play.setOnClickListener(v -> launchClient());
-        TextView chest = label("▣  Открыть сундук", 12, 0xFF382500, true); chest.setGravity(Gravity.CENTER);
+        TextView chest = label("▣  DAILY REWARDS", 12, 0xFF382500, true); chest.setGravity(Gravity.CENTER);
         chest.setBackground(box(0xFFF4C34A, 5, 0xFF8C6420));
         LinearLayout.LayoutParams chp = lp(190, 30); chp.topMargin = dp(4); actions.addView(chest, chp);
+        chest.setOnClickListener(v -> showInfo("Daily rewards", "Награды доступны в игровом клиенте MegaCraft."));
         launchPanel.addView(actions); bottom.addView(launchPanel, lp(-1, 106));
         page.addView(bottom, lp(-1, 152));
     }
@@ -188,9 +191,42 @@ public class MainActivity extends Activity {
         TextView b = label(text, 10, Color.WHITE, true); b.setGravity(Gravity.CENTER);
         b.setPadding(dp(8), 0, dp(8), 0); b.setBackground(box(color, 5, 0xFF0D1A10));
         LinearLayout.LayoutParams p = lp(-2, 34); p.leftMargin = dp(3); p.rightMargin = dp(3);
-        b.setOnClickListener(v -> Toast.makeText(this, text, Toast.LENGTH_SHORT).show()); return b;
+        b.setOnClickListener(v -> { if (text.contains("Топ")) showInfo("Weekly leaderboard", "Таблица лидеров доступна в игровом клиенте."); else if (text.contains("Найти")) showInfo("Find a party", "Поиск команды будет доступен после подключения к серверу."); else inviteFriend(); }); return b;
     }
 
+    private void showInfo(String title, String message) {
+        new android.app.AlertDialog.Builder(this).setTitle(title).setMessage(message)
+            .setPositiveButton("OK", null).show();
+    }
+    private void onMenuAction(String title) {
+        if (title.contains("Магазин")) showInfo("Store", "Магазин MegaCraft. Покупки доступны в игровом клиенте.");
+        else if (title.contains("Тиры")) showInfo("PvP Arenas", "Открой MegaCraft и выбери PvP-режим на сервере.");
+        else if (title.contains("скин")) showInfo("My skin", "Управление скином пока доступно в самом MegaCraft.");
+        else inviteFriend();
+    }
+    private void showSettings() {
+        String[] items = {"Изменить ник", "Скопировать адрес сервера", "О приложении"};
+        new android.app.AlertDialog.Builder(this).setTitle("Mega Launcher settings")
+            .setItems(items, (d, which) -> {
+                if (which == 0) editNickname();
+                else if (which == 1) copyServer();
+                else showInfo("Mega Launcher", "Launcher for the installed MegaCraft PE client. Version 1.1");
+            }).show();
+    }
+    private void copyServer() {
+        ClipboardManager cb = (ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+        cb.setPrimaryClip(ClipData.newPlainText("Server", SERVER));
+        Toast.makeText(this, "latecraft.ru скопирован", Toast.LENGTH_SHORT).show();
+    }
+    private void inviteFriend() {
+        Intent share = new Intent(Intent.ACTION_SEND);
+        share.setType("text/plain");
+        share.putExtra(Intent.EXTRA_TEXT, "Заходи играть в MegaCraft! Сервер: " + SERVER);
+        startActivity(Intent.createChooser(share, "Invite a friend"));
+    }
+    private void showDiscord() {
+        showInfo("Discord", "Пришли ссылку-приглашение Discord, и я добавлю переход по ней.");
+    }
     private String getNickname() {
         return getPreferences(MODE_PRIVATE).getString("nickname", "Игрок");
     }
